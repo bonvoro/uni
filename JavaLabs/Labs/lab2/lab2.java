@@ -1,7 +1,5 @@
 package lab2;
 
-import java.util.Arrays;
-
 public class lab2 {
     public static StringBuilder processText(StringBuilder text) {
         if (text == null || text.isEmpty()) {
