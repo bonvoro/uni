@@ -1,0 +1,295 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bug Tracker — UI mock (US 1.1,1.1.1,1.3,1.3.1,1.5)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Bug Tracker</h1>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <div class="tab active" data-tab="login">Login (US1.1)</div>
+    <div class="tab" data-tab="create-report">Create Report (US1.3)</div>
+    <div class="tab" data-tab="create-account">Create Account (US1.5)</div>
+  </div>
+
+  <!-- LOGIN -->
+  <section id="login" class="card">
+    <div id="login-msg"></div>
+    <form id="loginForm" onsubmit="return false;">
+      <div class="row">
+        <label for="login-username">Ім'я користувача</label>
+        <input id="login-username" type="text" maxlength="10" placeholder="User Name" />
+      </div>
+      <div class="row">
+        <label for="login-password">Пароль</label>
+        <input id="login-password" type="password" maxlength="10" placeholder="Password" />
+      </div>
+      <div class="row">
+        <label></label>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <label class="small"><input id="keep-signed" type="checkbox" /> Запам'ятати мене</label>
+          <button class="btn primary" onclick="handleLogin()">Увійти</button>
+          <button class="btn" onclick="resetLogin()">Відмінити</button>
+        </div>
+      </div>
+      <div class="info">Тестовий акаунт: <b>TestAdmin</b> / <b>Password1@</b></div>
+    </form>
+  </section>
+
+  <!-- CREATE REPORT -->
+  <section id="create-report" class="card" style="display:none;margin-top:14px;">
+    <div id="cr-msg"></div>
+    <form id="reportForm" onsubmit="return false;">
+      <div class="row">
+        <label for="summary">Короткий опис *</label>
+        <input id="summary" type="text" maxlength="200" placeholder="Summary (min 5 chars)" />
+      </div>
+
+      <div class="grid">
+        <div>
+          <div class="row"><label for="project">Проект *</label>
+            <select id="project"><option value="">--select--</option><option>Start_Up</option><option>Testing_Project</option></select></div>
+          <div class="row"><label for="issueType">Тип звіту *</label>
+            <select id="issueType"><option value="">--select--</option><option>Bug</option><option>Task</option></select></div>
+          <div class="row"><label for="priority">Пріоритет *</label>
+            <select id="priority"><option value="">--select--</option><option>Critical</option><option>Major</option><option>Medium</option><option>Low</option></select></div>
+          <div class="row"><label for="affectVersion">Пов'язана версія</label>
+            <input id="affectVersion" type="text" maxlength="15" placeholder="Affect Version" /></div>
+          <div class="row"><label for="fixVersion">Виправлена версія</label>
+            <input id="fixVersion" type="text" placeholder="Fix Version" /></div>
+        </div>
+
+        <div>
+          <div class="row"><label for="assignee">Уповноважений *</label>
+            <select id="assignee"><option value="">--select--</option><option>TestAdmin</option><option>dev1</option><option>qa1</option></select></div>
+          <div class="row"><label for="severity">Строгість *</label>
+            <select id="severity"><option value="">--select--</option><option>Critical</option><option>Major</option><option>Medium</option><option>Low</option></select></div>
+          <div class="row"><label for="environment">Середовище *</label>
+            <select id="environment"><option value="">--select--</option><option>SIT</option><option>UAT</option><option>PDN</option></select></div>
+          <div class="row"><label for="dueDate">Кінцева дата</label>
+            <input id="dueDate" type="date" /></div>
+          <div class="row"><label for="description">Опис</label>
+            <textarea id="description" maxlength="10000" placeholder="Description (optional)"></textarea></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="btn primary" onclick="saveReport()">Зберегти звіт</button>
+        <button class="btn" onclick="closeReport()">Закрити</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- CREATE ACCOUNT -->
+  <section id="create-account" class="card" style="display:none;margin-top:14px;">
+    <div id="ca-msg"></div>
+    <form id="accountForm" onsubmit="return false;">
+      <div class="row">
+        <label for="ca-username">Ім'я користувача *</label>
+        <input id="ca-username" type="text" maxlength="20" placeholder="User Name (12-20 chars, start with letter)" />
+      </div>
+      <div class="row">
+        <label for="ca-password">Пароль *</label>
+        <input id="ca-password" type="password" maxlength="20" placeholder="Password (min 12 chars, 1 lower, 1 upper, 1 digit, 1 special)" />
+      </div>
+      <div class="row">
+        <label for="ca-confirm">Підтвердити пароль *</label>
+        <input id="ca-confirm" type="password" maxlength="20" placeholder="Confirm Password" />
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button class="btn primary" onclick="createAccount()">Зареєструватись</button>
+        <button class="btn" onclick="cancelAccount()">Відмінити</button>
+      </div>
+    </form>
+  </section>
+
+</div>
+
+<script>
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click',()=> {
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      const tab = t.dataset.tab;
+      document.querySelectorAll('section.card').forEach(s=>s.style.display='none');
+      document.getElementById(tab).style.display = 'block';
+    });
+  });
+
+  // --- LOGIN logic (USС1.1 + 1.1.1) ---
+  const LS_KEY = 'bt_remember';
+  window.addEventListener('load', ()=> {
+    const saved = localStorage.getItem(LS_KEY);
+    if(saved){
+      try{
+        const obj = JSON.parse(saved);
+        document.getElementById('login-username').value = obj.username||'';
+        document.getElementById('login-password').value = obj.password||'';
+        document.getElementById('keep-signed').checked = true;
+      }catch(e){}
+    }
+  });
+
+  function handleLogin(){
+    const u = document.getElementById('login-username').value.trim();
+    const p = document.getElementById('login-password').value;
+    if(!u){
+      alert('Please enter the user name');
+      return;
+    }
+    const existingUsers = ['TestAdmin'];
+    if(!existingUsers.includes(u)){
+      alert('User does not exist');
+      return;
+    }
+    if(!p){
+      alert('Please enter the password');
+      return;
+    }
+    if(u === 'TestAdmin' && p !== 'Password1@'){
+      alert('Incorrect password');
+      return;
+    }
+    document.getElementById('login-msg').innerHTML = '<div class="msg success">Login successful — opening Main Window (mock)</div>';
+    if(document.getElementById('keep-signed').checked){
+      localStorage.setItem(LS_KEY, JSON.stringify({username:u,password:p}));
+    } else {
+      localStorage.removeItem(LS_KEY);
+    }
+  }
+
+  function resetLogin(){
+    document.getElementById('login-username').value='';
+    document.getElementById('login-password').value='';
+    document.getElementById('keep-signed').checked=false;
+    localStorage.removeItem(LS_KEY);
+  }
+
+  // --- CREATE REPORT logic (US1.3 + 1.3.1) ---
+  function saveReport(){
+    const summary = document.getElementById('summary').value.trim();
+    const project = document.getElementById('project').value;
+    const issueType = document.getElementById('issueType').value;
+    const priority = document.getElementById('priority').value;
+    const assignee = document.getElementById('assignee').value;
+    const severity = document.getElementById('severity').value;
+    const environment = document.getElementById('environment').value;
+    const dueDate = document.getElementById('dueDate').value;
+
+    const required = {summary, project, issueType, priority, assignee, severity, environment};
+    const missingAny = Object.values(required).some(v=>!v);
+    if(missingAny){
+      if(!summary){ alert('Summary is not filled'); return; }
+      if(!project){ alert('Project is not defined'); return; }
+      if(!issueType){ alert('Issue Type is not defined'); return; }
+      if(!priority){ alert('Priority is not defined'); return; }
+      if(!assignee){ alert('Assignee is not defined'); return; }
+      if(!severity){ alert('Severity is not defined'); return; }
+      if(!environment){ alert('Environment is not defined'); return; }
+      alert('Mandatory fields are not filled');
+      return;
+    }
+    if(summary.length < 5){
+      alert('Summary is not filled');
+      return;
+    }
+    if(dueDate){
+      const sel = new Date(dueDate);
+      const now = new Date(); now.setHours(0,0,0,0);
+      if(sel < now){
+        alert('Due Date is less than the current date');
+        return;
+      }
+    }
+
+    document.getElementById('cr-msg').innerHTML = '<div class="msg success">New report has been created successfully</div>';
+    const key = 'bt_issue_counters';
+    let counters = JSON.parse(sessionStorage.getItem(key)||'{}');
+    counters[issueType] = (counters[issueType]||100) + 1;
+    sessionStorage.setItem(key, JSON.stringify(counters));
+    const id = issueType + '-' + counters[issueType];
+    document.getElementById('cr-msg').innerHTML += '<div class="small">Assigned Id: <b>'+id+'</b></div>';
+  }
+
+  function closeReport(){
+    document.getElementById('reportForm').reset();
+    document.getElementById('cr-msg').innerHTML='';
+  }
+
+  // --- CREATE ACCOUNT logic (US 1.5) ---
+  const existingUsers = new Set(['TestAdmin']);
+  function createAccount(){
+    const u = document.getElementById('ca-username').value.trim();
+    const p = document.getElementById('ca-password').value;
+    const c = document.getElementById('ca-confirm').value;
+
+    if(!u){ alert('Please enter the user name'); return; }
+    const usernameRegex = /^[A-Za-z][A-Za-z0-9_-]{11,19}$/;
+    if(!usernameRegex.test(u)){
+      alert('User Name must be defined with the following rules:\\n- the first character must be a letter\\n- it can contain letters, numbers, underscore, hyphen\\n- the length is between 12 to 20');
+      return;
+    }
+    if(existingUsers.has(u)){
+      alert('This user is already existing');
+      return;
+    }
+    if(!p){ alert('Please enter the password'); return; }
+    const passRegex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&+=]).{12,}$/;
+    if(!passRegex.test(p)){
+      alert('Password must be defined with the following rules:\\n- password length must be at least 12 characters\\n- password must contain number, at least one lower case letter\\n- at least one upper case letter and at least one special character\\n- allowed special characters: !@#$%^&+=');
+      return;
+    }
+    if(!c){ alert('Please confirm the password'); return; }
+    if(p !== c){ alert('Passwords do not match'); return; }
+
+    existingUsers.add(u);
+    document.getElementById('ca-msg').innerHTML = '<div class="msg success">User account has been created successfully</div>';
+  }
+
+  function cancelAccount(){
+    document.getElementById('accountForm').reset();
+    document.getElementById('ca-msg').innerHTML='';
+  }
+</script>
+</body>
+</html>
